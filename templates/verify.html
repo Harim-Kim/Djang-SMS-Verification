@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Verify your account</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Verify</button>
+  </form>
+  <p>Didn't you get verification code in 10 minutes? <a href="/reverify/">get Code</a></p>
+    {% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
+{% endblock %}

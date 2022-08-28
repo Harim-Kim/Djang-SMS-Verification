@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Verify your phone number</h1>
+  <form action='/phone_verify/' method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+      {% if phone %}
+      <input type="hidden" name='phone' value="{{ phone }}">
+      {% endif %}
+    <button type="submit">Verify</button>
+  </form>
+  <p>Didn't you get verification code in 10 minutes? <a href="/reverify/">get Code</a></p>
+{% endblock %}

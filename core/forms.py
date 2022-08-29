@@ -20,3 +20,6 @@ class VerifyForm(forms.Form):
 class reverifyForm(forms.Form):
     phone = forms.CharField(max_length=11, required=True, help_text='Phone number(max 11digits)')
 
+class LoginForm(forms.Form):
+    auth_input = forms.CharField(max_length=200)
+    password = forms.CharField(max_length=100)

@@ -126,3 +126,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'core.User'
 LOGIN_URL = '/'
 LOGIN_REDIRECT_URL = '/'
+#
+# AUTHENTICATION_BACKENDS = [
+#     'core.my_auth.UserBackend', # 우리가 만든 AUTH를 먼저 검사
+#     'django.contrib.auth.backends.ModelBackend', # Django가 관리하는 AUTH
+# ]

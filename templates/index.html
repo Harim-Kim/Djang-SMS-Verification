@@ -7,6 +7,7 @@
             {% csrf_token %}
             <input type="submit" value="Log out">
         </form>
+        <a href="/detail/{{ request.user.id }}">내 정보 보기</a>
     {% else %}
         <p>Please <a href="/login/">Log in</a> else <a href="/signup_phone_verify_page">Register</a></p>
     {%  endif %}

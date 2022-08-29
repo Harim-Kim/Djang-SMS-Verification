@@ -2,10 +2,27 @@
 
 {% block content %}
   <h1>Log in</h1>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Log in</button>
-  </form>
+    {{ res_data }}
+{#  <form method="post">#}
+{#    {% csrf_token %}#}
+{#    {{ form.as_p }}#}
+{#    <button type="submit">Log in</button>#}
+{#  </form>#}
+        <form  name="LoginForm" action="/login/" method="post">
+        {% csrf_token %}
+        {% if next %}
+            <input type="hidden" name="next" value="{{ next }}" />
+        {% endif %}
+
+        <label class="control-label" for="auth_input">auth_input</label>
+        <input type="text" id="auth_input" name="auth_input"  placeholder="auth_input">
+
+
+        <label class="control-label" for="password">Password</label>
+        <input type="password" name="password" id="password" placeholder="Password">
+        <button type="submit" class="btn">Login</button>
+        </form>
+
   <p>Don't have an account? <a href="/signup/">Register</a> now!</p>
+  <p>Forget password? <a href="/reverify/">Find My password</a></p>
 {% endblock %}

@@ -11,7 +11,6 @@ def send(phone):
 def check(phone, code):
     try:
         result = verify.verification_checks.create(to=kr_phone_prefix+phone[1:], code=code)
-        print(result)
     except TwilioRestException as e:
         # print("Failed Verfication", e.status)
 

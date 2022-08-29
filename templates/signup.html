@@ -2,6 +2,7 @@
 
 {% block content %}
   <h1>Register</h1>
+    {{ error }}
   <form method="post" action="/signup/">
     {% csrf_token %}
     {{ form.as_p }}

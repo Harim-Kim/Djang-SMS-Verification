@@ -4,7 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model, login, logout
 from django.template import RequestContext
 from django.contrib.auth.hashers import make_password, check_password
-from django.contrib.auth.forms import UserChangeForm
 from . import verify
 from .decorators import verification_required
 from . import models
@@ -18,16 +17,31 @@ def index(request):
 
 
 def signup(request):
+    error = None
+    phone = request.session.get("phone")
+    if phone is None:
+        return redirect('pre_signup_phone_verify')
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
-        if form.is_valid():
-            user_phone = models.AuthSmsSignIn.objects.filter(phone_number=form.cleaned_data.get('phone')).latest('phone_number')
-            if user_phone:
-                if form.phone == user_phone.phone_number:
-                    form.save()
-                    return redirect('index')
+        if request.POST['phone'] != request.session.get('phone'):
+            return render(request, 'signup.html', {"form":form, "error":"인증 받은 전화번호를 기입하길 바랍니다."})
 
-    return redirect('pre_signup_phone_verify')
+        print(form.is_valid())
+        error = []
+        for field in form:
+            if field.errors:
+                error.append(field.errors)
+            # print("Field Error:", field.name, field.errors)
+        if form.is_valid():
+            # user_phone = models.AuthSmsSignIn.objects.filter(phone_number=form.cleaned_data.get('phone')).latest('phone_number')
+            # if user_phone:
+            #     if form.phone == user_phone.phone_number:
+            del( request.session["phone"])
+            form.save()
+            return redirect('index')
+
+    form = UserCreationForm()
+    return render(request, 'signup.html', {"form":form, "error":error})
 
 def login_core(request):
     # res_data = {}
@@ -95,6 +109,7 @@ def signup_phone_verify_page(request):
             phone = form.cleaned_data.get('phone')
             verify.send(phone)
             form = VerifyForm()
+            # request.session["phone"] = phone
             # form.set_phone(phone)
             return render(request, 'phone_verify.html', {"form":form,"phone":phone})
     else:
@@ -115,16 +130,16 @@ def phone_verify(request):
         if result:
             auth = models.AuthSmsSignIn(phone_number=phone, auth_number=code)
             auth.save()
-            return render(request, 'signup.html', {"form":UserCreationForm(),"phone":phone})
+            request.session['phone'] = phone
+            return redirect('signup')
         else:
             message = {"message":"failed verification"}
 
-    return render(request, 'verify.html', {'form': VerifyForm(), 'message': message})
+    return render(request, 'verify_code.html', {'form': VerifyForm(), 'message': message})
 @login_required
 def detail(request, pk):
     User = get_user_model()
     user = get_object_or_404(User, pk=pk)
-    print(user.phone)
     context = {
         'user': user
     }
@@ -140,6 +155,7 @@ def reverify(request):
         print(form.is_valid())
         if form.is_valid():
             phone = form.cleaned_data.get('phone')
+            request.session['phone'] = phone
             verify.send(phone)
             return redirect('verify')
     return render(request, 'reverify.html')
@@ -147,24 +163,37 @@ def reverify(request):
 def verify_code(request):
     message = {}
     result = False
+    user = None
     if request.method == 'POST':
         form = VerifyForm(request.POST)
         if form.is_valid():
             code = form.cleaned_data.get('code')
-            result, status = verify.check(request.user.phone, code)
+            result, status = verify.check(request.session.get("phone"), code)
             # print(result,status)
             if result and status == 200:
-                request.user.is_verified = True
-                request.user.save()
+                user = get_user_model().objects.get(phone=request.session.get("phone"))
+                if user:
+                    del request.session['phone']
+                    login(request, user)
             elif status == 404:
                 message["message"] = "you need re-verification, code already expired"
-        if result:
-            return redirect('index')
+        if result and user:
+            return redirect('change_password')
 
     else:
         form = VerifyForm()
-    return render(request, 'verify.html', {'form': form, 'message': message} )
+    return render(request, 'verify_code.html', {'form': form, 'message': message})
 
+@login_required
 def change_password(request):
-    form = UserChangeForm()
-    return render(request, 'change_password.html', {'form':form})
+    if request.method == "POST":
+        user = request.user
+        password1 = request.POST['password1']
+        password2 = request.POST['password2']
+        if password2 == password1:
+            user.set_password(password1)
+            user.save()
+            logout(request)
+            return redirect('login')
+    # form = CustomUserChangeForm()
+    return render(request, 'change_password.html')
